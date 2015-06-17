@@ -1,0 +1,48 @@
+﻿@section scripts {
+    @Scripts.Render("~/bundles/app")
+}
+
+<div class="page-header">
+    <h1>Typor API</h1>
+</div>
+
+<div class="row">
+
+    <div class="col-md-4">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h2 class="panel-title">Shopping Carts</h2>
+            </div>
+            <div class="panel-body">
+                <ul class="list-unstyled" data-bind="foreach: shoppingCarts">
+                    <li>
+                        <strong><span data-bind="text: customer_name"></span></strong>: <span data-bind="text: products_count"></span> products
+                        <small><a href="#" data-bind="click: $parent.getShoppingCartDetail">Details</a></small>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <div class="alert alert-danger" data-bind="visible: error"><p data-bind="text: error"></p></div>
+    </div>
+
+    <!-- ko if:detail() -->
+
+    <div class="col-md-4">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h2 class="panel-title">Detail</h2>
+            </div>
+            <table class="table">
+                <tr><td>Customer Name</td><td data-bind="text: detail().customer_name"></td></tr>
+                <tr><td>Customer Surname</td><td data-bind="text: detail().customer_surname"></td></tr>
+                <tr><td>Products Count</td><td data-bind="text: detail().products_count"></td></tr>
+            </table>
+        </div>
+    </div>
+
+    <!-- /ko -->
+
+    <div class="col-md-4">
+        <!-- TODO: Add new ShoppingCart -->
+    </div>
+</div>
