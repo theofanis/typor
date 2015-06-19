@@ -28,6 +28,8 @@ namespace Typor.API
 
             // Remove the XML formatter
             config.Formatters.Remove(config.Formatters.XmlFormatter);
+            // Add BSON formatter
+            config.Formatters.Add(new System.Net.Http.Formatting.BsonMediaTypeFormatter());
         }
     }
 }
