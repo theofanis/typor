@@ -6,7 +6,7 @@ using System.Web;
 
 namespace Typor.API.Models
 {
-    public class TyporAPIContext : DbContext
+    public class TyporAPIContext : DbContext, ITyporAPIContext
     {
         // You can add custom code to this file. Changes will not be overwritten.
         // 
@@ -25,5 +25,12 @@ namespace Typor.API.Models
         public System.Data.Entity.DbSet<Typor.API.Models.Customer> Customers { get; set; }
 
         public System.Data.Entity.DbSet<Typor.API.Models.ShoppingCart> ShoppingCarts { get; set; }
+
+        public System.Data.Entity.DbSet<Typor.API.Models.Order> Orders { get; set; }
+
+        public void MarkAsModified(Product item)
+        {
+            Entry(item).State = EntityState.Modified;
+        }
     }
 }

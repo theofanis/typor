@@ -4,6 +4,7 @@ using System.Data;
 using System.Data.Entity;
 using System.Data.Entity.Infrastructure;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -13,21 +14,45 @@ using Typor.API.Models;
 
 namespace Typor.API.Controllers
 {
+    [RoutePrefix("api/products")]
     public class ProductsController : ApiController
     {
-        private TyporAPIContext db = new TyporAPIContext();
+        private ITyporAPIContext db = new TyporAPIContext();
+
+        public ProductsController() { }
+
+        public ProductsController(ITyporAPIContext context)
+        {
+            db = context;
+        }
+
+        // Typed lambda expression for Select() method on Products collection.
+        private static readonly Expression<Func<Product, ProductDTO>> AsProductDTO =
+            x => new ProductDTO
+            {
+                Name = x.Name,
+                Category = x.Category,
+                Description = x.Description,
+                Price = x.Price
+            };
 
         // GET: api/Products
-        public IQueryable<Product> GetProducts()
+        [Route("")]
+        public IQueryable<ProductDTO> GetProducts()
         {
-            return db.Products;
+            return db.Products.Select(AsProductDTO);
         }
 
         // GET: api/Products/5
-        [ResponseType(typeof(Product))]
+        [Route("{id:int}")]
+        [ResponseType(typeof(ProductDTO))]
         public async Task<IHttpActionResult> GetProduct(int id)
         {
-            Product product = await db.Products.FindAsync(id);
+            ProductDTO product = await db.Products
+                .Where(p => p.Id == id)
+                .Select(AsProductDTO)
+                .FirstOrDefaultAsync();
+
             if (product == null)
             {
                 return NotFound();
@@ -50,7 +75,7 @@ namespace Typor.API.Controllers
                 return BadRequest();
             }
 
-            db.Entry(product).State = EntityState.Modified;
+            db.MarkAsModified(product);
 
             try
             {
@@ -71,8 +96,38 @@ namespace Typor.API.Controllers
             return StatusCode(HttpStatusCode.NoContent);
         }
 
+        [Route("{id:int}/details")]
+        [ResponseType(typeof(ProductDTO))]
+        public async Task<IHttpActionResult> GetProductDetail(int id)
+        {
+            var product = await (from p in db.Products
+                                 where p.Id == id
+                                 select new ProductDTO
+                                 {
+                                     Name = p.Name,
+                                     Category = p.Category,
+                                     Description = p.Description,
+                                     Price = p.Price
+                                 }).FirstOrDefaultAsync();
+
+            if (product == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(product);
+        }
+
+        [Route("{category}")]
+        public IQueryable<ProductDTO> GetProductsByCategory(string category)
+        {
+            return db.Products
+                .Where(p => p.Category.ToString() == category)
+                .Select(AsProductDTO);
+        }
+
         // POST: api/Products
-        [ResponseType(typeof(Product))]
+        [ResponseType(typeof(ProductDTO))]
         public async Task<IHttpActionResult> PostProduct(Product product)
         {
             if (!ModelState.IsValid)
@@ -83,7 +138,15 @@ namespace Typor.API.Controllers
             db.Products.Add(product);
             await db.SaveChangesAsync();
 
-            return CreatedAtRoute("DefaultApi", new { id = product.Id }, product);
+            ProductDTO productDTO = new ProductDTO()
+            {
+                Name = product.Name,
+                Category = product.Category,
+                Description = product.Description,
+                Price = product.Price
+            };
+
+            return CreatedAtRoute("DefaultApi", new { id = product.Id }, productDTO);
         }
 
         // DELETE: api/Products/5
